@@ -6,15 +6,14 @@ from src.audit_logger import AuditLogger
 from src.guardrails import AgriculturalGuardrails
 from src.agent import AgriculturalAgent
 import os
+from dotenv import load_dotenv
 
-st.set_page_config(page_title="AgriAdviser AI - Auditable Agent", layout="wide")
+# Load secret API keys from the local .env file
+load_dotenv() 
+
+st.set_page_config(page_title="AgriAdviser AI", layout="centered")
 
 st.title("🌾 Agricultural Advisory AI Agent")
-st.markdown("**(Compliance Guarded & Fully Auditable)**")
-
-st.sidebar.header("Configuration")
-api_provider = st.sidebar.selectbox("LLM Provider", ["Google GenAI", "OpenAI"])
-api_key = st.sidebar.text_input(f"{api_provider} API Key", type="password")
 
 if "session_id" not in st.session_state:
     st.session_state["session_id"] = str(uuid.uuid4())
@@ -43,22 +42,21 @@ if prompt := st.chat_input("E.g., What fertilizer should I use for cotton in reg
         st.chat_message("assistant").error(block_msg)
         st.session_state["messages"].append({"role": "assistant", "content": block_msg})
     else:
-        if not api_key:
-            st.error("Please configure your API key in the sidebar.")
+        # Check environment variables for API keys
+        google_key = os.getenv("GOOGLE_API_KEY")
+        openai_key = os.getenv("OPENAI_API_KEY")
+        
+        if not google_key and not openai_key:
+            st.error("Missing API Key! Please add GOOGLE_API_KEY or OPENAI_API_KEY to your local `.env` file.")
         else:
             with st.spinner("Analyzing soil, weather, & market data..."):
                 try:
-                    if api_provider == "Google GenAI":
-                        os.environ["GOOGLE_API_KEY"] = api_key
-                        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ""
-                        # Note: If experiencing INVALID_ARGUMENT error, switch to gemini-1.5-pro-latest depending on region permissions.
+                    if google_key:
                         llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0.1)
                     else:
-                        os.environ["OPENAI_API_KEY"] = api_key
                         llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
 
                     agent = AgriculturalAgent(llm, logger, session_id)
-                    
                     raw_output = agent.run(prompt)
                     
                     # 2. Output Guardrail Check
