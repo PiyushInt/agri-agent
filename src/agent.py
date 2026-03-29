@@ -1,6 +1,5 @@
 from langchain_core.tools import tool
-from langchain.agents import create_react_agent, AgentExecutor
-from langchain_core.prompts import PromptTemplate
+from langgraph.prebuilt import create_react_agent
 from src.audit_logger import AuditLogger
 from src import tools as domain_tools
 
@@ -41,46 +40,20 @@ class AgriculturalAgent:
 
         self.tools = [get_weather, get_soil, get_market_price, list_approved_chemicals]
         
-        prompt = PromptTemplate.from_template('''Answer the following questions as best you can. You are an Agricultural Advisory AI expert serving rural farmers. 
+        system_message = '''Answer the following questions as best you can. You are an Agricultural Advisory AI expert serving rural farmers. 
 Your goal is to provide actionable guidance balancing local weather, soil, and market prices constraints. 
 Always recommend *only* approved chemicals.
 
-You have access to the following tools:
-
-{tools}
-
-To use a tool, please use the exact following format:
-
-Thought: Do I need to use a tool? Yes
-Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action
-Observation: the result of the action
-
-When you have a response to say to the Human, or if you do not need to use a tool, you MUST use the format:
-
-Thought: Do I need to use a tool? No
-Final Answer: [your response here]
-
-Begin!
-
-Question: {input}
-Thought:{agent_scratchpad}''')
+You MUST use tools when possible to look up approved chemicals before recommending them.
+'''
         
-        self.agent = create_react_agent(self.llm, self.tools, prompt)
-        self.agent_executor = AgentExecutor(
-            agent=self.agent, 
-            tools=self.tools, 
-            verbose=True,
-            handle_parsing_errors=True
-        )
+        self.agent_executor = create_react_agent(self.llm, self.tools, prompt=system_message)
 
     def run(self, query: str) -> str:
-        # Run agent query capturing observations and thoughts
-        # Logging thoughts is partially implicit via execution, but we'll log the final raw response execution logic here.
         self.logger.log_agent_thought(self.session_id, f"Initiating ReAct Loop for query: '{query}'")
         try:
-            result = self.agent_executor.invoke({"input": query})
-            final_answer = result.get("output", "")
+            result = self.agent_executor.invoke({"messages": [("user", query)]})
+            final_answer = result["messages"][-1].content
             return final_answer
         except Exception as e:
             self.logger.log_agent_thought(self.session_id, f"Error encountering processing: {str(e)}")
