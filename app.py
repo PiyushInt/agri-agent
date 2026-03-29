@@ -2,9 +2,9 @@ import streamlit as st
 import uuid
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
-from audit_logger import AuditLogger
-from guardrails import AgriculturalGuardrails
-from agent import AgriculturalAgent
+from src.audit_logger import AuditLogger
+from src.guardrails import AgriculturalGuardrails
+from src.agent import AgriculturalAgent
 import os
 
 st.set_page_config(page_title="AgriAdviser AI - Auditable Agent", layout="wide")

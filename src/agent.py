@@ -1,8 +1,8 @@
 from langchain_core.tools import tool
 from langchain.agents import create_react_agent, AgentExecutor
 from langchain_core.prompts import PromptTemplate
-from audit_logger import AuditLogger
-import tools as domain_tools
+from src.audit_logger import AuditLogger
+from src import tools as domain_tools
 
 class AgriculturalAgent:
     def __init__(self, llm, logger: AuditLogger, session_id: str):
