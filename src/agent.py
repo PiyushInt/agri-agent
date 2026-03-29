@@ -53,7 +53,14 @@ You MUST use tools when possible to look up approved chemicals before recommendi
         self.logger.log_agent_thought(self.session_id, f"Initiating ReAct Loop for query: '{query}'")
         try:
             result = self.agent_executor.invoke({"messages": [("user", query)]})
-            final_answer = result["messages"][-1].content
+            raw_content = result["messages"][-1].content
+            
+            # Robustly convert parts/lists to a single string for the guardrails
+            if isinstance(raw_content, list):
+                final_answer = "".join([str(p.get("text", p)) if isinstance(p, dict) else str(p) for p in raw_content])
+            else:
+                final_answer = str(raw_content)
+                
             return final_answer
         except Exception as e:
             self.logger.log_agent_thought(self.session_id, f"Error encountering processing: {str(e)}")
