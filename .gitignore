@@ -26,4 +26,4 @@ build/
 .streamlit/
 
 # Images we don't want committed
-architecture_diagram.png
+# architecture_diagram.png
