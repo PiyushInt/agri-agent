@@ -1,48 +1,11 @@
-# 🏗️ Architecture Document: Agricultural Advisory Agent
+# Agricultural Advisory Agent
 
 ## System Overview Overview
 The Agricultural Advisory Agent is designed with a strict emphasis on compliance, guardrail enforcement, and auditability. It operates on a ReAct (Reasoning and Acting) framework, intercepted by dedicated policy guards.
 
 ## Architecture Diagram
 
-```mermaid
-graph TD
-    User([Farmer / User]) -->|1. Prompts| UI[Streamlit UI]
-    
-    subgraph "Compliance Layer"
-        UI -->|2. Check Input| InputGuard[Input Guardrail]
-        OutputGuard[Output Guardrail] -->|8. Clean Response| UI
-    end
-    
-    subgraph "Core Agent Logic"
-        InputGuard -->|3. Safe Prompt| Agent[ReAct Agent]
-        Agent -->|6. Draft Response| OutputGuard
-    end
-    
-    subgraph "Tool Integration Ecosystem"
-        Agent <-->|4. Fetch Data| Tools[Mock Environment Tools]
-        Tools --> Weather[Weather API]
-        Tools --> Soil[Soil API]
-        Tools --> Market[Market Price API]
-        Tools --> Chem[Approved Chemicals API]
-    end
-    
-    subgraph "Auditability"
-        UI -.->|Logs Prompt| Audit[(Audit Logger SQLite)]
-        InputGuard -.->|Logs Safety Check| Audit
-        Agent -.->|Logs Thoughts| Audit
-        Tools -.->|Logs Execution| Audit
-        OutputGuard -.->|Logs Modifications| Audit
-    end
-
-    classDef guard fill:#ffcccc,stroke:#ff0000,stroke-width:2px;
-    classDef agent fill:#ccddff,stroke:#0055ff,stroke-width:2px;
-    classDef database fill:#e6ffe6,stroke:#00ff00,stroke-width:2px;
-    
-    class InputGuard,OutputGuard guard;
-    class Agent agent;
-    class Audit database;
-```
+![Architecture Diagram](./architecture_diagram.png)
 
 ## Component Roles & Communication
 
